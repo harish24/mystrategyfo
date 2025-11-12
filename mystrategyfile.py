@@ -4,7 +4,7 @@
 import random
 import string
 import time
-import configparser
+
 from growwapi import GrowwAPI
 
 # =====================
@@ -13,25 +13,6 @@ from growwapi import GrowwAPI
 
 # === Setup Groww API ===
 # Please use the "Generate API key" option on the API keys page to obtain the API key and Secret.
-
-
-
-# Create a ConfigParser object
-config = configparser.ConfigParser()
-
-# Read the configuration file
-config.read('/tmp/adjustments.txt')
-
-
-
-def updateprops(expiry,key):
-    # Modify an existing value
-
-    config[expiry][key] = 'true'
-    # Write the changes back to the file
-    with open('/tmp/adjustments.txt', 'w') as configfile:
-        config.write(configfile)
-
 
 
 user_api_key = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjI1NTEwOTcwODksImlhdCI6MTc2MjY5NzA4OSwibmJmIjoxNzYyNjk3MDg5LCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCI0M2FjMGUwYi0zMWU0LTRiODAtYWQxNS0wNGQ5MTk1NWQyNzRcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiMWFhMmJjMTUtMWEwYy00ZWU4LWEyZjUtMmM3MmMxYTRhMjhjXCIsXCJkZXZpY2VJZFwiOlwiOWQyNDA2MjktY2MxZS01MWNiLWFkZGYtMjc3ZjFmZWE0ZDY3XCIsXCJzZXNzaW9uSWRcIjpcIjYzYjllZGE3LWRiMTctNDUzOS05ZTZkLTc5OTg2YWVjMzg2OVwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYkYxY2pIU251QkY4VzVpamFGR2JXenRSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcImF1dGgtdG90cFwiLFwic291cmNlSXBBZGRyZXNzXCI6XCIxMTUuOTguMTg5LjM1LDE2Mi4xNTguMjM1LjYyLDM1LjI0MS4yMy4xMjNcIixcInR3b0ZhRXhwaXJ5VHNcIjoyNTUxMDk3MDg5MTg4fSIsImlzcyI6ImFwZXgtYXV0aC1wcm9kLWFwcCJ9.Z5ve6H2WFg2HViKYX_c1PMfv4OHUOBqEFQwil9oyIEbD66k0128h3ddOt2ImbCfl9VJH5EStIwoW8FU5IbRW8g"
@@ -122,58 +103,54 @@ def closeposition(position):
     pass
 
 
-try:
-
+def setHoldings():
+    global holdings_response, oneposition, onenet, twoposition, twonet
     holdings_response = groww.get_positions_for_user()
     print("Original Holdings")
-    print(holdings_response)
-
-
+    #print(holdings_response)
+    for position in holdings_response['positions']:
+        print('trading_symbol=',position['trading_symbol'],'quantity',position['quantity'],'net_price',position['net_price'],'realised_pnl',position['realised_pnl'])
+    print("-------------------------------------")
     for item in holdings_response['positions'].copy():  # Iterate over a copy
         if item['quantity'] == 0:  # Remove closed/zero numbers
             holdings_response['positions'].remove(item)
-
     print("Open Holdings")
-    print(holdings_response['positions'])
-
+    #print(holdings_response['positions'])
+    for position in holdings_response['positions']:
+        print('trading_symbol=',position['trading_symbol'],'quantity',position['quantity'],'net_price',position['net_price'],'realised_pnl',position['realised_pnl'])
+    print("-------------------------------------")
     oneposition = holdings_response['positions'][0]
     onenet = holdings_response['positions'][0]['net_price']
+    oneSpot = "" + oneposition['trading_symbol'][:-2]
+    oneposition['spot'] = oneSpot[len(oneSpot) - 5:len(oneSpot)]
+    print("one option spot ", oneposition['spot'])
+    oneposition['optionType'] = "" + oneposition['trading_symbol'][-2:]
+    oneposition['expiry'] = "" + oneposition['trading_symbol'][:-7]
+    print("one option type " ,oneposition['optionType'])
+    print("one option expiry " ,oneposition['expiry'])
+    print("No of positions ", len(holdings_response['positions']))
+    if(len(holdings_response['positions']) > 1):
+        twoposition = holdings_response['positions'][1]
+        twonet = holdings_response['positions'][1]['net_price']
+        twoSpot = "" + twoposition['trading_symbol'][:-2]
+        twoposition['spot'] = twoSpot[len(twoSpot) - 5:len(twoSpot)]
+        print("two option spot ", twoposition['spot'])
+        twoposition['optionType'] = "" + twoposition['trading_symbol'][-2:]
+        twoposition['expiry'] = "" + twoposition['trading_symbol'][:-7]
+        print("two option type ", twoposition['optionType'])
+        print("two option expiry ", twoposition['expiry'])
 
 
-    oneSpot = ""+oneposition['trading_symbol'][:-2]
-    print(oneSpot[len(oneSpot)-5:len(oneSpot)])
-    oneposition['spot']=oneSpot[len(oneSpot)-5:len(oneSpot)]
-    print(oneposition['spot'])
+try:
 
-    oneposition['optionType'] = ""+oneposition['trading_symbol'][-2:]
-    oneposition['expiry'] = ""+oneposition['trading_symbol'][:-7]
-    print(oneposition['optionType'])
-    print(oneposition['expiry'])
+    setHoldings()
 
-    print(len(holdings_response['positions']))
-
-    print(holdings_response['positions'][1]['trading_symbol'])
-    print(holdings_response['positions'][1]['net_price'])
-    twoposition = holdings_response['positions'][1]
-    twonet = holdings_response['positions'][1]['net_price']
-
-    twoSpot = ""+twoposition['trading_symbol'][:-2]
-    print(twoSpot[len(twoSpot)-5:len(twoSpot)])
-    twoposition['spot']=twoSpot[len(twoSpot)-5:len(twoSpot)]
-    print(twoposition['spot'])
-
-    twoposition['optionType'] = ""+twoposition['trading_symbol'][-2:]
-    twoposition['expiry'] = ""+twoposition['trading_symbol'][:-7]
-    print(twoposition['optionType'])
-    print(twoposition['expiry'])
-
-
-    adjustone3x = config[oneposition['expiry']]['adjustone3x']
-    adjusttwo3x = config[twoposition['expiry']]['adjusttwo3x']
-    adjustone2x = config[oneposition['expiry']]['adjustone2x']
-    adjusttwo2x = config[twoposition['expiry']]['adjusttwo2x']
-    one90close = config[oneposition['expiry']]['one90close']
-    two90close = config[twoposition['expiry']]['two90close']
+    adjustone3x = False
+    adjusttwo3x = False
+    adjustone2x = False
+    adjusttwo2x = False
+    one90close = False
+    two90close = False
 
     while len(holdings_response['positions']) >= 2 :
         quote_response = groww.get_quote(
@@ -211,7 +188,9 @@ try:
                 order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
             )
             print(place_order_response)
-            updateprops(oneposition['expiry'],"adjustone3x")
+            adjustone3x = True
+            time.sleep(2)
+            setHoldings()
         else:
             print(onenet, onelive,  " skipping one as not thripled ",onenet*3)
             time.sleep(2)
@@ -234,20 +213,22 @@ try:
                 order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
             )
             print(place_order_response)
-            updateprops(twoposition['expiry'],"adjusttwo3x")
+            adjusttwo3x = True
+            time.sleep(2)
+            setHoldings()
 
         else:
             print(twonet, twolive, "skipping two as not thripled ",twonet*3)
             time.sleep(2)
-
-
 
         if onelive > onenet*2 and adjustone2x == False:
             print(onenet, onelive," switch second to move forward ",onenet*2)
 
             closeposition(twoposition)
             setAdjustment(twoposition)
-            updateprops(oneposition['expiry'],"adjustone2x")
+            adjustone2x = True
+            time.sleep(2)
+            setHoldings()
 
         else:
 
@@ -259,7 +240,8 @@ try:
             closeposition(oneposition)
             setAdjustment(oneposition)
             adjusttwo2x = True
-            updateprops(twoposition['expiry'],"adjusttwo2x")
+            time.sleep(2)
+            setHoldings()
 
         else:
 
@@ -285,8 +267,7 @@ try:
                 order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
             )
             print(place_order_response)
-            updateprops(oneposition['expiry'],"one90close")
-
+            one90close = True
 
         else:
             print(onenet, onelive,  " skipping one as not touched 80% ",onenet*20/100)
@@ -310,15 +291,34 @@ try:
                 order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
             )
             print(place_order_response)
-            updateprops(twoposition['expiry'],"two90close")
-
+            two90close = True
         else:
             print(twonet, twolive,  " skipping two as not touched 80% ", twonet*20/100)
             time.sleep(2)
+        setHoldings()
 
+    while len(holdings_response['positions']) == 1 :
+        quote_response = groww.get_quote(
+            exchange=groww.EXCHANGE_NSE,
+            segment=groww.SEGMENT_FNO,
+            trading_symbol=holdings_response['positions'][0]['trading_symbol']
+        )
+        #print(quote_response['last_price'])
+
+        onelive = quote_response['last_price']
+        if onelive > onenet*2 and adjustone2x == False:
+            closeposition(oneposition)
+            adjustone2x=True
+        else:
+            print(onenet, onelive,  " skipping one as not doubled ",onenet*2)
+            time.sleep(2)
+
+        setHoldings()
+
+    while len(holdings_response['positions']) == 0 :
+        print("No Holdings...")
 
 except Exception as e:
     print(f"❌ Failed to place BUY order: {e}")
     exit(1)
-
 
