@@ -49,6 +49,7 @@ def setAdjustment(position):
                     order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
                 )
                 print(place_order_response)
+                time.sleep(3)
                 return currentspot
             else:
                 continue
@@ -76,8 +77,7 @@ def setAdjustment(position):
                     order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
                 )
                 print(place_order_response)
-                time.sleep(2)
-
+                time.sleep(3)
                 return currentspot
             else:
                 continue
@@ -98,7 +98,7 @@ def closeposition(position):
         order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
     )
     print(place_order_response)
-    time.sleep(2)
+    time.sleep(3)
 
     pass
 
@@ -141,6 +141,27 @@ def setHoldings():
         print("two option expiry ", twoposition['expiry'])
 
 
+def placelimitOrder(position,limitValue):
+    global length, random_string, place_order_response
+    length = 9
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    place_order_response = groww.place_order(
+        trading_symbol=position['trading_symbol'],
+        quantity=position['debit_quantity'],
+        validity=groww.VALIDITY_DAY,
+        exchange=groww.EXCHANGE_NSE,
+        segment=position['segment'],
+        product=groww.PRODUCT_NRML,
+        order_type=groww.ORDER_TYPE_LIMIT,
+        price=limitValue,
+        transaction_type=groww.TRANSACTION_TYPE_BUY,
+        order_reference_id="Ab-" + random_string + "-1628190"
+        # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
+    )
+    print(place_order_response)
+    time.sleep(3)
+
+
 try:
 
     setHoldings()
@@ -162,6 +183,7 @@ try:
 
         onelive = quote_response['last_price']
 
+        time.sleep(3)
         quote_response = groww.get_quote(
             exchange=groww.EXCHANGE_NSE,
             segment=groww.SEGMENT_FNO,
@@ -173,128 +195,62 @@ try:
 
         if onelive > onenet*3 and adjustone3x == False:
             print(onenet, onelive, "Exiting one as price to 3x ",onenet*3)
-            random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
-
-            place_order_response = groww.place_order(
-                trading_symbol=oneposition['trading_symbol'],
-                quantity=oneposition['debit_quantity'],
-                validity=groww.VALIDITY_DAY,
-                exchange=groww.EXCHANGE_NSE,
-                segment=oneposition['segment'],
-                product=groww.PRODUCT_NRML,
-                order_type=groww.ORDER_TYPE_MARKET,
-                price=onelive,
-                transaction_type=groww.TRANSACTION_TYPE_BUY,
-                order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
-            )
-            print(place_order_response)
+            closeposition(oneposition)
             adjustone3x = True
-            time.sleep(2)
+            time.sleep(3)
             setHoldings()
         else:
             print(onenet, onelive,  " skipping one as not thripled ",onenet*3)
-            time.sleep(2)
+            time.sleep(3)
 
         if twolive > twonet*3 and adjusttwo3x == False:
             print(twonet, twolive, " Exiting two as price to 3x ",twonet*3)
-            length = 9
-            random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-            place_order_response = groww.place_order(
-                trading_symbol=twoposition['trading_symbol'],
-                quantity=twoposition['debit_quantity'],
-                validity=groww.VALIDITY_DAY,
-                exchange=groww.EXCHANGE_NSE,
-                segment=twoposition['segment'],
-                product=groww.PRODUCT_NRML,
-                order_type=groww.ORDER_TYPE_MARKET,
-                price=twolive,
-                transaction_type=groww.TRANSACTION_TYPE_BUY,
-                order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
-            )
-            print(place_order_response)
+            closeposition(twoposition)
             adjusttwo3x = True
-            time.sleep(2)
+            time.sleep(3)
             setHoldings()
 
         else:
             print(twonet, twolive, "skipping two as not thripled ",twonet*3)
-            time.sleep(2)
+            time.sleep(3)
 
         if onelive > onenet*2 and adjustone2x == False:
             print(onenet, onelive," switch second to move forward ",onenet*2)
-
             closeposition(twoposition)
             setAdjustment(twoposition)
             adjustone2x = True
-            time.sleep(2)
             setHoldings()
 
         else:
-
             print(onenet, onelive,  " skipping one as not doubled ",onenet*2)
-            time.sleep(2)
+            time.sleep(3)
 
         if twolive > twonet*2 and adjusttwo2x == False:
             print(twonet, twolive," switch first to move forward ",twonet*2)
             closeposition(oneposition)
             setAdjustment(oneposition)
             adjusttwo2x = True
-            time.sleep(2)
             setHoldings()
 
         else:
-
             print(twonet, twolive, "skipping two as not doubled ",twonet*2)
-            time.sleep(2)
+            time.sleep(3)
 
         if onelive <= onenet*20/100 and one90close == False:
             print(onenet, onelive, " closing one as reaching 80% done ",onenet*20/100)
-
-            length = 9
-            random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-            place_order_response = groww.place_order(
-                trading_symbol=oneposition['trading_symbol'],
-                quantity=oneposition['debit_quantity'],
-                validity=groww.VALIDITY_DAY,
-                exchange=groww.EXCHANGE_NSE,
-                segment=oneposition['segment'],
-                product=groww.PRODUCT_NRML,
-                order_type=groww.ORDER_TYPE_LIMIT,
-                price=round(onenet*15/100,1),
-                transaction_type=groww.TRANSACTION_TYPE_BUY,
-                order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
-            )
-            print(place_order_response)
+            placelimitOrder(oneposition,round(onenet * 15 / 100, 1))
             one90close = True
-
         else:
             print(onenet, onelive,  " skipping one as not touched 80% ",onenet*20/100)
-            time.sleep(2)
+            time.sleep(3)
 
         if twolive <= twonet*20/100 and two90close == False:
             print(twonet, twolive," closing two as reaching 80% done ",twonet*20/100)
-            length = 9
-            random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=9))
-
-            place_order_response = groww.place_order(
-                trading_symbol=twoposition['trading_symbol'],
-                quantity=twoposition['debit_quantity'],
-                validity=groww.VALIDITY_DAY,
-                exchange=groww.EXCHANGE_NSE,
-                segment=twoposition['segment'],
-                product=groww.PRODUCT_NRML,
-                order_type=groww.ORDER_TYPE_LIMIT,
-                price=round(twonet*15/100,1),
-                transaction_type=groww.TRANSACTION_TYPE_BUY,
-                order_reference_id="Ab-"+random_string+"-1628190"  # Optional: User provided 8 to 20 length alphanumeric reference ID to track the order
-            )
-            print(place_order_response)
+            placelimitOrder(twoposition,round(twonet*15/100,1))
             two90close = True
         else:
             print(twonet, twolive,  " skipping two as not touched 80% ", twonet*20/100)
-            time.sleep(2)
+            time.sleep(3)
         setHoldings()
 
     while len(holdings_response['positions']) == 1 :
@@ -311,7 +267,7 @@ try:
             adjustone2x=True
         else:
             print(onenet, onelive,  " skipping one as not doubled ",onenet*2)
-            time.sleep(2)
+            time.sleep(3)
 
         setHoldings()
 
